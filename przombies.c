@@ -56,8 +56,9 @@ int main(int argc, char** argv){
 	const char * filename = "zombies.log";
 	FILE * logfile = NULL;
 
-	if (!(logfile = fopen(filename, "w+"))) {
+	if (!(logfile = fopen(filename, "w"))) {
 		fprintf (stderr, "Could not open log file\n");
+		return -1;
 	}
 
 	fprintf(logfile, "Log:\n\n");
@@ -89,7 +90,7 @@ int main(int argc, char** argv){
 				if (!strcmp(state, "Z")) {
 					//i = 3 -> PID
 			        if (i == 3) {
-			            fprintf(logfile, "\t%s", token);
+			            fprintf(logfile, "\n\t%s", token);
 			        }
 			        //i = 4 -> PPID
 			        if (i == 4) {
