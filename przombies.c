@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <string.h>
 #include <sys/signal.h>
 
 #define FALSE 0
@@ -26,7 +27,7 @@ FILE* execute_command(const char* command) {
 		close(file_descriptors[0]);
 		dup2(file_descriptors[1], 1);
 
-		execlp("ps", "ps", "aux", NULL);
+		execlp("ps", "ps", "-el", NULL);
 
 		return NULL; // This line is never reached
 	}
@@ -48,15 +49,58 @@ int main(int argc, char** argv){
     }
 
 
+	const char separator[2] = " ";
+	char *token;
+	char state[2] = ".";
 	char buffer[100];
+
+	printf("Log:\n");
+	printf("\tPID\t\tPPID\t\tNome do Programa\n");
+	printf("============================================================\n");
+
 	//Main loop
 	while(TRUE) {
-		FILE* process_input_stream = execute_command("ps aux");
+		FILE* process_input_stream = execute_command("ps -el");
 
+		int first = TRUE;
 		while(!feof(process_input_stream)) {
+			if (first == TRUE) {
+				fgets(buffer, 100, process_input_stream);
+				first = FALSE;
+			}
+
 			fgets(buffer, 100, process_input_stream);
-			printf("%s", buffer);
+
+			token = strtok(buffer, separator);
+		    int i = 0;
+		    while( token != NULL )
+		    {
+		        //i = 1 -> state
+		        if (i == 1) {
+	            	strcpy(state, token);
+		        }
+				// se estado for
+				if (!strcmp(state, "Z")) {
+					//i = 3 -> PID
+			        if (i == 3) {
+			            printf("\t%s", token);
+			        }
+			        //i = 4 -> PPID
+			        if (i == 4) {
+			            printf("\t\t%s", token);
+			        }
+			        //i = 13 -> CMD
+			        if (i == 13) {
+			            printf("\t\t%s", token);
+			        }
+				}
+
+		        ++i;
+		        token = strtok(NULL, separator);
+		    }
 		}
+
+		printf("============================================================\n");
 
 		sleep(time_to_sleep);
 	}
