@@ -53,10 +53,16 @@ int main(int argc, char** argv){
 	char *token;
 	char state[2] = ".";
 	char buffer[100];
+	const char * filename = "zombies.log";
+	FILE * logfile = NULL;
 
-	printf("Log:\n");
-	printf("\tPID\t\tPPID\t\tNome do Programa\n");
-	printf("============================================================\n");
+	if (!(logfile = fopen(filename, "w+"))) {
+		fprintf (stderr, "Could not open log file\n");
+	}
+
+	fprintf(logfile, "Log:\n\n");
+	fprintf(logfile, "\tPID\t\tPPID\t\tNome do Programa\n");
+	fprintf(logfile, "===========================================================\n");
 
 	//Main loop
 	while(TRUE) {
@@ -83,24 +89,23 @@ int main(int argc, char** argv){
 				if (!strcmp(state, "Z")) {
 					//i = 3 -> PID
 			        if (i == 3) {
-			            printf("\t%s", token);
+			            fprintf(logfile, "\t%s", token);
 			        }
 			        //i = 4 -> PPID
 			        if (i == 4) {
-			            printf("\t\t%s", token);
+			            fprintf(logfile, "\t\t%s", token);
 			        }
 			        //i = 13 -> CMD
 			        if (i == 13) {
-			            printf("\t\t%s", token);
+			            fprintf(logfile, "\t\t%s", token);
 			        }
 				}
-
 		        ++i;
 		        token = strtok(NULL, separator);
 		    }
 		}
 
-		printf("============================================================\n");
+		fprintf(logfile, "===========================================================\n");
 
 		sleep(time_to_sleep);
 	}
