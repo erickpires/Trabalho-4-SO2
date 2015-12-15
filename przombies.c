@@ -6,6 +6,8 @@
 #include <time.h>
 #include <stdarg.h>
 #include <sys/signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define FALSE 0
 #define TRUE 1
@@ -66,6 +68,37 @@ FILE* execute_command(char* command, int arg_count, ...) {
 
 int main(int argc, char** argv){
 
+	pid_t pid, sid;
+
+   	/* Fork off the parent process */
+    pid = fork();
+    if (pid < 0) {
+            exit(EXIT_FAILURE);
+    }
+    /* If we got a good PID, then
+       we can exit the parent process. */
+    if (pid > 0) {
+            exit(EXIT_SUCCESS);
+    }
+
+    /* Change the file mode mask */
+    umask(0);
+
+    /* Open any logs here */
+	const char * filename = "zombies.log";
+	FILE * logfile = NULL;
+	if (!(logfile = fopen(filename, "w"))) {
+		fprintf (stderr, "Could not open log file\n");
+		return -1;
+	}
+
+    /* Create a new SID for the child process */
+    sid = setsid();
+    if (sid < 0) {
+            /* Log any failures here */
+            exit(EXIT_FAILURE);
+    }
+
 	// Let the child processes die and not become a zombie.
 	//signal(SIGCHLD, SIG_IGN);
 
@@ -90,17 +123,11 @@ int main(int argc, char** argv){
 	char *token;
 	char state[2] = ".";
 	char buffer[100];
-	const char * filename = "zombies.log";
-	FILE * logfile = NULL;
 
 	// Time related stuff
 	time_t raw_time;
 	struct tm* time_info;
 
-	if (!(logfile = fopen(filename, "w"))) {
-		fprintf (stderr, "Could not open log file\n");
-		return -1;
-	}
 
 
 	fprintf(logfile, "Log:\n\n");
