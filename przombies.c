@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <stdarg.h>
 #include <sys/signal.h>
 
 #define FALSE 0
@@ -18,7 +19,22 @@ void stop_running(int signal) {
 	terminated = TRUE;
 }
 
-FILE* execute_command(const char* command) {
+FILE* execute_command(char* command, int arg_count, ...) {
+	// Varargs
+	va_list args_list;
+	char** args = (char**) alloca((arg_count + 2) * sizeof(char*));
+	va_start(args_list, arg_count);
+
+	args[0] = command;
+	int i;
+	for(i = 1; i < arg_count + 1; i++)
+		args[i] = va_arg(args_list, char*);
+
+	args[i] = NULL;
+
+	va_end(args_list);
+
+	// Pipe
 	int file_descriptors[2];
 	if(pipe(file_descriptors) == -1) {
 		fprintf(stderr, "Could not pipe\n");
@@ -38,7 +54,7 @@ FILE* execute_command(const char* command) {
 		dup2(file_descriptors[1], 1);
 
 		// TODO: This is hardcoded
-		execlp("ps", "ps", "-el", NULL);
+		execvp(command, args);
 
 		return NULL; // This line is never reached
 	}
@@ -93,7 +109,7 @@ int main(int argc, char** argv){
 
 	//Main loop
 	while(is_running) {
-		FILE* process_input_stream = execute_command("ps -el");
+		FILE* process_input_stream = execute_command("ps", 1, "-el");
 
 		// Getting time now
 		time(&raw_time);
