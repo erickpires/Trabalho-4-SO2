@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 #include <sys/signal.h>
 
 #define FALSE 0
@@ -76,18 +77,28 @@ int main(int argc, char** argv){
 	const char * filename = "zombies.log";
 	FILE * logfile = NULL;
 
+	// Time related stuff
+	time_t raw_time;
+	struct tm* time_info;
+
 	if (!(logfile = fopen(filename, "w"))) {
 		fprintf (stderr, "Could not open log file\n");
 		return -1;
 	}
 
+
 	fprintf(logfile, "Log:\n\n");
 	fprintf(logfile, "\tPID\t\tPPID\t\tNome do Programa\n");
-	fprintf(logfile, "===========================================================");
+	fprintf(logfile, "===========================================================\n");
 
 	//Main loop
 	while(is_running) {
 		FILE* process_input_stream = execute_command("ps -el");
+
+		// Getting time now
+		time(&raw_time);
+		time_info = localtime(&raw_time);
+		fprintf(logfile, "Time: %s\n", asctime(time_info));
 
 		int first = TRUE;
 		while(!feof(process_input_stream)) {
@@ -110,7 +121,7 @@ int main(int argc, char** argv){
 				if (!strcmp(state, "Z")) {
 					//i = 3 -> PID
 			        if (i == 3) {
-			            fprintf(logfile, "\n\t%s", token);
+			            fprintf(logfile, "\t%s", token);
 			        }
 			        //i = 4 -> PPID
 			        if (i == 4) {
@@ -118,7 +129,7 @@ int main(int argc, char** argv){
 			        }
 			        //i = 13 -> CMD
 			        if (i == 13) {
-			            fprintf(logfile, "\t\t%s", token);
+			            fprintf(logfile, "\t\t%s\n", token);
 			        }
 				}
 		        ++i;
